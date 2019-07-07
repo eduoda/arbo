@@ -1,0 +1,24 @@
+{
+  "name": "arbo.js",
+  "version": "0.0.1",
+  "description": "Lightweight CMF",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/nodemon/bin/nodemon.js index.js run",
+    "test": "./node_modules/mocha/bin/mocha test.js"
+  },
+  "author": "Eduardo Oda <oda@member.fsf.org>",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "fisherjs": "0.0.1",
+    "mysql": "^2.17.1",
+    "nodemon": "^1.19.1",
+    "notorm": "file:../notorm"
+  },
+  "devDependencies": {
+    "mocha": "^6.1.4",
+    "supertest": "^4.0.2"
+  }
+}
