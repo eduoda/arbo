@@ -38,6 +38,8 @@ app.addModule = async function(conn,mod){
       await Permission.loadPermissions(conn).then(console.log("Permissions reloaded"));
       console.log("Installed "+mod.name);
     }
+    if(mod.load)
+      await mod.load(conn);
   }catch(e){
     console.error("Error installing module "+mod.name);
     return;

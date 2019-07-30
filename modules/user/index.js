@@ -13,6 +13,12 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
 ]}){
   static async setup(conn){
     await super.setup(conn);
+    let salt = CryptUtils.randomString(10);
+    let password = CryptUtils.hash(salt,'root');
+    let root = await new User({login:'root',password:password,salt:salt,status:'active'}).save(conn);
+    await new Var({name:'root',value:root.id}).save(conn);
+  }
+  static async load(conn){
     emitter.addListener('entityPrepareUser',(conn,user) => {
       delete user.password;
       delete user.salt;
@@ -31,9 +37,8 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
         user.password = old.password;
       }
     });
-    let root = await new User({login:'root',password:'root',status:'active'}).save(conn);
-    await new Var({name:'root',value:root.id}).save(conn);
   }
+
   static addMiddleware(app){
     app.use(
       [

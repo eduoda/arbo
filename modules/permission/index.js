@@ -23,7 +23,7 @@ class Permission extends Base({_restify:true,_emitter:emitter,_table:'permission
   }
 }
 
-class Role extends Base({restify:true,_emitter:emitter,_table:'role',_columns:[
+class Role extends Base({_restify:true,_emitter:emitter,_table:'role',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
   {name:'name',type:'VARCHAR(255)',constraint:'UNIQUE'}
 ]}){
@@ -38,7 +38,7 @@ class Role extends Base({restify:true,_emitter:emitter,_table:'role',_columns:[
   }
 }
 
-class RolePermission extends Base({restify:true,_emitter:emitter,_table:'role_permission',_columns:[
+class RolePermission extends Base({_restify:true,_emitter:emitter,_table:'role_permission',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
   {name:'role_id',type:'INT(11)',foreignKey:{references:'role(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'permission_id',type:'INT(11)',foreignKey:{references:'permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
@@ -58,6 +58,8 @@ class PermissionCache extends Base({_emitter:emitter,_table:'permission_cache',_
 ]}){
   static async setup(conn){
     await super.setup(conn);
+  }
+  static async load(conn){
     emitter.addListener('entityCreateSection',(conn,section) => {
       PermissionCache.build(conn,`WHERE leaf.id=${section.id}`);
     });

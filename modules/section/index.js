@@ -14,7 +14,8 @@ class Section extends Base({_restify:true,_requireSection:true,_emitter:emitter,
     await super.setup(conn);
     let section1 = await new Section({name:'Section 1',ownerId:vars['root'],lft:1,rgt:2}).save(conn);
     await new Var({name:'section1',value:section1.id}).save(conn);
-
+  }
+  static async load(conn){
     emitter.addListener('entityPreSaveSection',async (conn,section) => {
       let create = section.id==null;
       if(create){
@@ -45,6 +46,8 @@ class Membership extends Base({_restify:true,_requireSection:true,_emitter:emitt
     await super.setup(conn);
     let rootMembership = await new Membership({userId:vars['root'],sectionId:vars['section1'],status:'active'}).save(conn);
     await new Var({name:'rootMembership',value:rootMembership.id}).save(conn);
+    let guestMembership = await new Membership({userId:null,sectionId:vars['section1'],status:'active'}).save(conn);
+    await new Var({name:'guestMembership',value:guestMembership.id}).save(conn);
   }
   static test(request){require("./test.js").TestMembership.runTests(request)}
 }
@@ -57,6 +60,7 @@ class MembershipRole extends Base({_restify:true,_requireSection:false,_emitter:
   static async setup(conn){
     await super.setup(conn);
     await new MembershipRole({membershipId:vars['rootMembership'],roleId:vars['adminRole']}).save(conn);
+    await new MembershipRole({membershipId:vars['guestMembership'],roleId:vars['guestRole']}).save(conn);
   }
 }
 
