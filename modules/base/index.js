@@ -14,7 +14,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
       return _basePath;
     }
     static async setup(conn){
-      this.createTable(conn);
+      await this.createTable(conn);
     }
     static async uninstall(conn){
       this.dropTable(conn);
