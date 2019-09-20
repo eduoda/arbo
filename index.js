@@ -57,7 +57,7 @@ app.wakeUp = async function(){
 
     let tabs = await User.rawAll(conn,'SHOW TABLES;').then(res => res.map(x => x.Tables_in_Arbo))
 
-    if(tabs.includes("vars")){
+    if(tabs.includes("var")){
       // load infos
       await Var.loadVars(conn).then(console.log("Vars loaded"));
     }else {
