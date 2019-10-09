@@ -16,6 +16,8 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
     let salt = CryptUtils.randomString(10);
     let password = CryptUtils.hash(salt,'root');
     let root = await new User({login:'root',password:password,salt:salt,status:'active'}).save(conn);
+    let guest = await new User({login:'guest',password:null,salt:null,status:'active'}).save(conn);
+    await new Var({name:'guest',value:guest.id}).save(conn);
     await new Var({name:'root',value:root.id}).save(conn);
   }
   static async load(conn){
@@ -58,7 +60,8 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
         },
         async (req, res, next) => {
           if(res.locals.user==null){
-            res.locals.user = new User({login:'guest'});
+            res.locals.user = await new User({id: vars["guest"]}).load(res.locals.conn);
+
           }
           return next();
         }
