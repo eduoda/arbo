@@ -54,17 +54,23 @@ app.wakeUp = async function(){
     [Var,Permission,Role,RolePermission,User,Token,Section,Membership,MembershipRole,PermissionCache,Content,ContentSection,Page]
       .forEach(async mod => {if(mod.uninstall) await mod.uninstall(conn); else await mod.dropTable(conn)});
     await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 1;', []);
-    
-    if((await User.rawAll(conn,'SHOW TABLES;')).length>0){
+
+    let tables = await User.rawAll(conn,'SHOW TABLES;').then(res => res.map(x => x.Tables_in_Arbo))
+
+    if(tables.includes("var")){
       // load infos
       await Var.loadVars(conn).then(console.log("Vars loaded"));
-      await Permission.loadPermissions(conn).then(console.log("Permissions loaded"));
     }else {
       // empty db, new installation
-      Var.setup(conn);
+      await Var.setup(conn);
       await new Var({name:'module_'+Var.name,value:true}).save(conn);
       await Var.loadVars(conn).then(console.log("Vars loaded"));
     }
+
+    if(tables.includes("permission")){
+      await Permission.loadPermissions(conn).then(console.log("Permissions loaded"));
+    }
+
     await app.addModule(conn,Var);
     await app.addModule(conn,Permission);
     await app.addModule(conn,Role);
