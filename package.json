@@ -15,7 +15,7 @@
     "fisherjs": "0.0.1",
     "mysql": "^2.17.1",
     "nodemon": "^1.19.1",
-    "notorm": "file:../notorm"
+    "notorm": "^0.0.2"
   },
   "devDependencies": {
     "mocha": "^6.1.4",
