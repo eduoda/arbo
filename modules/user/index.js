@@ -88,7 +88,7 @@ User.router.get("/tokens", async (req, res, next) => {
   }catch(e){next(e)}
 });
 
-class Token extends Base({_emitter:emitter,_table:'token',_columns:[
+class Token extends Base({_restify:true,_emitter:emitter,_table:'token',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
   {name:'user_id',type:'INT(11)',foreignKey:{references:'user(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'token',type:'VARCHAR(255)',constraint:'UNIQUE'},

@@ -49,7 +49,7 @@ class RolePermission extends Base({_restify:true,_emitter:emitter,_table:'role_p
   }
 }
 
-class PermissionCache extends Base({_emitter:emitter,_table:'permission_cache',_columns:[
+class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permission_cache',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
   {name:'user_id',type:'INT(11)',index:'user_permission',foreignKey:{references:'user(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'permission_id',type:'INT(11)',index:'user_permission',foreignKey:{references:'permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
