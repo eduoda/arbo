@@ -1,6 +1,6 @@
 {
   "name": "arbojs",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Lightweight CMF",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,7 @@
   "author": "Eduardo Oda <oda@member.fsf.org>",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "camelcase": "^5.3.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "fisherjs": "0.0.1",
