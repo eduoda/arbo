@@ -51,6 +51,7 @@ let arbo = ({_mysqlOptions}) => {
         await mod.load(conn);
     }catch(e){
       console.error("Error installing module "+mod.name);
+      console.log(e)
       return;
     }
   }
@@ -59,12 +60,11 @@ let arbo = ({_mysqlOptions}) => {
     try{
       let conn = await mysql.getConn();
 
-      await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 0;', []);
-      [Var,Permission,Role,RolePermission,User,Token,Section,Membership,MembershipRole,PermissionCache,Content,ContentSection,Page]
-        .forEach(async mod => {if(mod.uninstall) await mod.uninstall(conn); else await mod.dropTable(conn)});
-      await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 1;', []);
+      // await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 0;', []);
+      // app.modules.forEach(async mod => {if(mod.uninstall) await mod.uninstall(conn); else await mod.dropTable(conn)});
+      // await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 1;', []);
 
-      let tables = await User.rawAll(conn,'SHOW TABLES;').then(res => res.map(x => x.Tables_in_Arbo))
+      let tables = await User.rawAll(conn,'SELECT table_name AS t FROM information_schema.tables WHERE table_schema=?;',[_mysqlOptions.database]).then(res => res.map(x => x.t))
 
       if(tables.includes("var")){
         // load infos
@@ -106,6 +106,7 @@ let arbo = ({_mysqlOptions}) => {
     }
     app.use(function (err, req, res, next) {
       if(res.headersSent) return next(err);
+      if(err.code && err.code=='ER_DUP_ENTRY') err = 409;
       if(Number.isInteger(err)) res.status(err).send();
       else res.status(500).send();
       next(err);

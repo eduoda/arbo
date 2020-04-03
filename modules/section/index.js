@@ -46,7 +46,7 @@ class Membership extends Base({_restify:true,_requireSection:true,_emitter:emitt
     await super.setup(conn);
     let rootMembership = await new Membership({userId:vars['root'],sectionId:vars['section1'],status:'active'}).save(conn);
     await new Var({name:'rootMembership',value:rootMembership.id}).save(conn);
-    let guestMembership = await new Membership({userId:null,sectionId:vars['section1'],status:'active'}).save(conn);
+    let guestMembership = await new Membership({userId:vars['guest'],sectionId:vars['section1'],status:'active'}).save(conn);
     await new Var({name:'guestMembership',value:guestMembership.id}).save(conn);
   }
   static test(request){require("./test.js").TestMembership.runTests(request)}

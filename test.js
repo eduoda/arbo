@@ -13,18 +13,21 @@ let modules = [
   User,
   Section,
   Membership,
-  Permission,
-  Role,
-  RolePermission,
-  PermissionCache,
-  Token,
-  MembershipRole,
-  Content,
-  ContentSection,
-  Page
+  // Permission,
+  // Role,
+  // RolePermission,
+  // PermissionCache,
+  // Token,
+  // MembershipRole,
+  // Content,
+  // ContentSection,
+  // Page
 ]
 request.data={};
-modules.forEach(mod => {
-  if(mod.test)
-    mod.test(request);
-});
+describe('Arbo Tests', function() {
+  modules.forEach(async (mod) => {
+    if(mod.test){
+      mod.test(request);
+    }
+  });
+})

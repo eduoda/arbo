@@ -5,7 +5,7 @@ let CryptUtils = require('../cryptUtils');
 
 class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
-  {name:'login',type:'VARCHAR(255)',constraint:'UNIQUE'},
+  {name:'login',type:'VARCHAR(255)',constraint:'UNIQUE NOT NULL'},
   {name:'email',type:'VARCHAR(255)'},
   {name:'password',type:'VARCHAR(255)'},
   {name:'salt',type:'VARCHAR(255)'},
@@ -83,13 +83,13 @@ User.router.post("/auth", async (req, res, next) => {
   }catch(e){next(e)}
 });
 
-User.router.get("/tokens", async (req, res, next) => {
-  try{
-    let es = await Token.search(res.locals.conn,{userId:res.locals.user.id},0,1000);
-    es.forEach(async e => {await e.prepare(res.locals.conn)});
-    res.json(es);
-  }catch(e){next(e)}
-});
+// User.router.get("/tokens", async (req, res, next) => {
+//   try{
+//     let es = await Token.search(res.locals.conn,{userId:res.locals.user.id},0,1000);
+//     es.forEach(async e => {await e.prepare(res.locals.conn)});
+//     res.json(es);
+//   }catch(e){next(e)}
+// });
 
 class Token extends Base({_restify:true,_emitter:emitter,_table:'token',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},

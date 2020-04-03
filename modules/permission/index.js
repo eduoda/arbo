@@ -58,6 +58,7 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
 ]}){
   static async setup(conn){
     await super.setup(conn);
+    await this.rebuild(conn);
   }
   static async load(conn){
     emitter.addListener('entityCreateSection',(conn,section) => {
@@ -76,11 +77,11 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
     // emitter.addListener('entityCreatePermission',async permission => {
     //   PermissionCache.build(`WHERE permission.id=${permission.id}`);
     // });
-    PermissionCache.build(conn);
+    //PermissionCache.build(conn);
   }
   static async rebuild(conn){
     await this.rawDelete(conn,`TRUNCATE permission_cache;`,[]);
-    PermissionCache.build(conn);
+    let n = await PermissionCache.build(conn);
     emitter.emit('permissionCacheRebuild',conn,n);
   }
   static async build(conn,where=''){
@@ -100,6 +101,7 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
       ${where};
     `,[]);
     emitter.emit('permissionCacheUpdate',conn,n);
+    return n;
   }
 }
 
