@@ -36,15 +36,18 @@ let arbo = ({_mysqlOptions}) => {
       if(!vars['module_'+mod.name]){
         console.log("Installing "+mod.name);
         // new module
+        if(mod.name!='Permission'){
+          if(mod.permissions)
+            for(const perm of mod.permissions)
+              await new Permission({permission:perm}).save(conn)
+          await Permission.loadPermissions(conn).then(console.log("Permissions reloaded"));
+        }
         if(mod.setup)
           await mod.setup(conn);
         else
           await mod.createTable(conn);
-        if(mod.permissions)
-          mod.permissions.forEach(async perm => {await new Permission({permission:perm}).save(conn)});
         await new Var({name:'module_'+mod.name,value:true}).save(conn);
         await Var.loadVars(conn).then(console.log("Vars reloaded"));
-        await Permission.loadPermissions(conn).then(console.log("Permissions reloaded"));
         console.log("Installed "+mod.name);
       }
       if(mod.load)
@@ -57,6 +60,7 @@ let arbo = ({_mysqlOptions}) => {
   }
 
   app.serve = async function(port){
+    console.log(port)
     try{
       let conn = await mysql.getConn();
 
@@ -111,7 +115,7 @@ let arbo = ({_mysqlOptions}) => {
       else res.status(500).send();
       next(err);
     });
-    port = port | 3000;
+    port = port?port:3000;
     app.server = app.listen(port, () => {console.log("Arbo running on port "+port)});
   }
   return app;

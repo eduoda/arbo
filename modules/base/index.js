@@ -49,7 +49,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
           ${groupInjection}
           LIMIT ${offset},${limit}
         ;`;
-        console.log(query);
+        // console.log(query);
         let values = [];
         if(sectionId) values.push(sectionId);
         values.push(userId);
@@ -64,7 +64,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
           ${groupInjection}
           LIMIT ${offset},${limit}
         ;`;
-        console.log(query);
+        // console.log(query);
         return this.runSelect(conn,query,whereValuesInjection);
       }
       return [];
