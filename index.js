@@ -60,7 +60,6 @@ let arbo = ({_mysqlOptions}) => {
   }
 
   app.serve = async function(port){
-    console.log(port)
     try{
       let conn = await mysql.getConn();
 
