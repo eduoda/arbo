@@ -1,4 +1,4 @@
-let {app,emitter,vars,permissions} = require('./globals')
+let {emitter,vars,permissions,mailer} = require('./globals')
 let express = require("express");
 let cors = require('cors')
 let {MySQL} = require('./mysql');
@@ -8,7 +8,7 @@ let {User,Token} = require('./modules/user');
 let {Section,Membership,MembershipRole} = require('./modules/section');
 let {Content,ContentSection,Page} = require('./modules/content');
 
-let arbo = ({_mysqlOptions}) => {
+let arbo = ({_mysqlOptions,_mailOptions}) => {
   _mysqlOptions = Object.assign({}, {
     connectionLimit: 10,
     host: "localhost",
@@ -16,8 +16,12 @@ let arbo = ({_mysqlOptions}) => {
     user: "root",
     password: "root"
   }, _mysqlOptions);
-  app = express();
   let mysql = new MySQL(_mysqlOptions);
+  if(!_mailOptions)
+    _mailOptions = {test:true};
+  mailer.setOptions(_mailOptions);
+
+  app = express();
   app.use(cors());
   app.use(express.json());
   app.use(mysql.mw());

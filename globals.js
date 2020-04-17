@@ -1,12 +1,13 @@
 let Fisher = require('fisherjs');
-let app;
 let emitter = new Fisher();
 let vars = {};
 let permissions = {};
+let {Mailer} = require('./mailer');
+let mailer = new Mailer();
 
 module.exports = {
-  app,
   emitter,
   vars,
-  permissions
+  permissions,
+  mailer
 }
