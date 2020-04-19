@@ -13,7 +13,7 @@
     "camelcase": "^5.3.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "fisherjs": "0.0.1",
+    "fisherjs": "0.0.2",
     "mysql": "^2.18.1",
     "nodemailer": "^6.4.6",
     "nodemon": "^1.19.4",

@@ -29,7 +29,7 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
       user.salt = CryptUtils.randomString(10);
       user.password = CryptUtils.hash(user.salt,user.password);
       user.status = "active";
-    });
+    },false,10);
     emitter.addListener('entityPreUpdateUser',async (conn,user) => {
       let old = await new User({id:user.id}).load(conn);
       if(user.password){
@@ -39,7 +39,7 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
         user.salt = old.salt;
         user.password = old.password;
       }
-    });
+    },true);
   }
 
   static addMiddleware(app){
