@@ -15,7 +15,7 @@ class MySQL{
   mw(){
     return async (req,res,next) =>{
       let conn = await this.getConn();
-      res.on('finish', () => {conn.release()});
+      // res.on('finish', () => {conn.release()});
       res.locals.conn = conn;
       return next();
     }

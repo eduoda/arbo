@@ -27,7 +27,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
     res.locals.lastMiddlewareWereCalled = false;
-    res.on('finish', async () => {
+    res.on('finish',  () => {
       if(!res.locals.lastMiddlewareWereCalled){
         console.log("DONT FORGET TO CALL NEXT:" + req.originalUrl);
       }
@@ -35,11 +35,6 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
       console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
-      res.on('finish', async () => {
-        // TODO: move to the last middleware
-        console.log("COMMIT");
-        await User.rawAll(res.locals.conn,'COMMIT;');
-      });
     }
     return next();
   });
@@ -130,7 +125,12 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       console.log(e);
     }
     app.use(async (req, res, next) => {
+      console.log("COMMIT");
+      await User.rawAll(res.locals.conn,'COMMIT;');
+      console.log("MYSQL CONN RELEASE");
+      await res.locals.conn.release();
       res.locals.lastMiddlewareWereCalled = true;
+      next();
     });
     app.use(async (err, req, res, next) => {
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
