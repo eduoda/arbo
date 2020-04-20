@@ -161,8 +161,9 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
     baseClass.router.post("/",async (req,res,next) => {
       try{
         await baseClass.checkCRUDPermission(req,res,next);
-        console.log(req.body)
+        // console.log(req.body)
         res.json(await (await new baseClass(req.body).save(res.locals.conn)).prepare(res.locals.conn));
+        next();
       }catch(e){next(e)}
     });
 
@@ -171,6 +172,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
         let e = await new baseClass({id:req.params.id}).load(res.locals.conn);
         await baseClass.checkCRUDPermission(req,res,next,e);
         res.json(await e.prepare(res.locals.conn));
+        next();
       }catch(e){next(e)}
     });
 
@@ -182,6 +184,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
         let es = await baseClass.searchDeep(res.locals.conn,res.locals.user.id,offset,limit,req.params.sid);
         es.forEach(async e => {await e.prepare(res.locals.conn)});
         res.json(es);
+        next();
       }catch(e){next(e)}
     });
 
@@ -192,6 +195,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
           req.body.sectionId = e.sectionId;
         await baseClass.checkCRUDPermission(req,res,next,e);
         res.json(await (await new baseClass(req.body).save(res.locals.conn)).prepare(res.locals.conn));
+        next();
       }catch(e){next(e)}
     });
 
@@ -201,6 +205,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
         await baseClass.checkCRUDPermission(req,res,next,e);
         await e.delete(res.locals.conn);
         res.json(await e.prepare(res.locals.conn));
+        next();
       }catch(e){next(e)}
     });
 

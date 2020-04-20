@@ -146,6 +146,7 @@ Content.router.post("/:sectionId/:type", async (req, res, next) => {
     await Content.checkPermission(res.locals.conn,res.locals.user.id,req.params.sectionId,'create',req.params.type);
     let e = await Content.create(res.locals.conn,new Content.contentTypes[req.params.type](req.body),res.locals.user.id,req.params.sectionId);
     res.json(e.prepare(res.locals.conn));
+    next();
   }catch(e){next(e)}
 });
 
@@ -154,6 +155,7 @@ Content.router.get("/:sectionId/:type/:id", async (req, res, next) => {
     let e = await Content.get(res.locals.conn,req.params.type,req.params.id);
     await Content.checkPermission(res.locals.conn,res.locals.user.id,req.params.sectionId,req.params.type,'read',e.contentId);
     res.json(e.prepare(res.locals.conn));
+    next();
   }catch(e){next(e)}
 });
 
@@ -164,6 +166,7 @@ Content.router.get("/:sectionId/:type", async (req, res, next) => {
     let es = await Content.search(res.locals.conn,req.params.sectionId,req.params.type,res.locals.user.id,offset,limit);
     es.forEach(e => {e.prepare(res.locals.conn)});
     res.json(es);
+    next();
   }catch(e){next(e)}
 });
 
@@ -172,6 +175,7 @@ Content.router.put("/:sectionId/:type", async (req, res, next) => {
     await Content.checkPermission(res.locals.conn,res.locals.user.id,req.params.sectionId,'edit',req.params.type);
     let e = await Content.update(res.locals.conn,new Content.contentTypes[req.params.type](req.body));
     res.json(e.prepare(res.locals.conn));
+    next();
   }catch(e){next(e)}
 });
 
@@ -180,6 +184,7 @@ Content.router.delete("/:sectionId/:type/:id", async (req, res, next) => {
     await Content.checkPermission(res.locals.conn,res.locals.user.id,req.params.sectionId,'delete',req.params.id);
     let e = await Content.delete(res.locals.conn,req.params.type,req.params.id);
     res.json(e.prepare(res.locals.conn));
+    next();
   }catch(e){next(e)}
 });
 

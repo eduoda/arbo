@@ -80,6 +80,7 @@ User.router.post("/auth", async (req, res, next) => {
     if(user[0].password!==shadow || user[0].status!=='active')
       return next(401);
     res.json(await Token.createToken(res.locals.conn,user[0].id));
+    next();
   }catch(e){next(e)}
 });
 
