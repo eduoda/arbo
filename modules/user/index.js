@@ -42,6 +42,11 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
     },true);
   }
 
+  checkPassword(password){
+    let shadow = CryptUtils.hash(this.salt,password);
+    return this.password===shadow && this.status==='active';
+  }
+
   static addMiddleware(app){
     app.use(
       [
@@ -76,10 +81,11 @@ User.router.post("/auth", async (req, res, next) => {
     let user = await User.search(res.locals.conn,{login:req.body.login,email:req.body.login},0,1,false,'OR');
     if(user.length==0)
       return next(401);
-    let shadow = CryptUtils.hash(user[0].salt,req.body.password);
-    if(user[0].password!==shadow || user[0].status!=='active')
+    user = user[0];
+    user = new User(user); // notorm bug workaround
+    if(!user.checkPassword(req.body.password))
       return next(401);
-    res.json(await Token.createToken(res.locals.conn,user[0].id));
+    res.json(await Token.createToken(res.locals.conn,user.id));
     next();
   }catch(e){next(e)}
 });
