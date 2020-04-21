@@ -1,6 +1,6 @@
 {
   "name": "arbojs",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Lightweight CMF",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "mysql": "^2.18.1",
     "nodemailer": "^6.4.6",
     "nodemon": "^1.19.4",
-    "notorm": "0.0.2"
+    "notorm": "^0.0.4"
   },
   "devDependencies": {
     "mocha": "^6.2.3",
