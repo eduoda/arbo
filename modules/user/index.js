@@ -82,7 +82,7 @@ User.router.post("/auth", async (req, res, next) => {
     if(user.length==0)
       return next(401);
     user = user[0];
-    user = new User(user); // notorm bug workaround
+    // user = new User(user); // notorm bug workaround
     if(!user.checkPassword(req.body.password))
       return next(401);
     res.json(await Token.createToken(res.locals.conn,user.id));
