@@ -15,12 +15,12 @@ class Permission extends Base({_restify:true,_emitter:emitter,_table:'permission
   static loadPermissions(conn){
     return this.list(conn,0,10000).then(ls => ls.forEach(v=> { permissions[v.permission] = v.id }))
   }
-  static async ensurePermission(conn,userId,sectionId,permissionId){
-    let query = `SELECT user_id FROM permission_cache WHERE (? IS NULL AND user_id IS NULL OR user_id = ?) AND section_id = ? AND (permission_id = ? OR permission_id = ?);`;
-    let p = await this.rawAll(conn,query,[userId,userId,sectionId,permissionId,permissions['admin']]);
-    if(p.length>0) return;
-    throw 403;
-  }
+  // static async ensurePermission(conn,userId,sectionId,permissionId){
+  //   let query = `SELECT user_id FROM permission_cache WHERE (? IS NULL AND user_id IS NULL OR user_id = ?) AND section_id = ? AND (permission_id = ? OR permission_id = ?);`;
+  //   let p = await this.rawAll(conn,query,[userId,userId,sectionId,permissionId,permissions['admin']]);
+  //   if(p.length>0) return;
+  //   throw 403;
+  // }
 }
 
 class Role extends Base({_restify:true,_emitter:emitter,_table:'role',_columns:[
