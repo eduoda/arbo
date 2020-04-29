@@ -21,6 +21,15 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
     await new Var({name:'root',value:root.id}).save(conn);
   }
   static async load(conn){
+    emitter.addListener('preCheckCRUDPermissionUser',(req,res,next,target,sectionId,permissionsToEnsure,hookData) => {
+      if(req.method=='DELETE') return;
+      if(req.method=='GET'){
+        if(res.locals.user.id==target.id){
+          hookData.override = true;
+          hookData.allow = true;
+        }
+      }
+    });
     emitter.addListener('entityPrepareUser',(conn,user) => {
       delete user.password;
       delete user.salt;
@@ -61,7 +70,7 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
           `,token);
           if(user.length==0)
             return next(401);
-          res.locals.user = user[0];
+          res.locals.user = await user[0].load(res.locals.conn);
           return next();
         },
         async (req, res, next) => {
@@ -82,7 +91,6 @@ User.router.post("/auth", async (req, res, next) => {
     if(user.length==0)
       return next(401);
     user = user[0];
-    // user = new User(user); // notorm bug workaround
     if(!user.checkPassword(req.body.password))
       return next(401);
     res.json(await Token.createToken(res.locals.conn,user.id));
