@@ -100,6 +100,15 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
     static async checkCRUDPermission(req,res,next,target){
       let sectionId = vars['section1'];
       let permissionsToEnsure = [permissions['admin']];
+      let hookData = {
+        override: false,
+        allow: false,
+      }
+      await _emitter.emit('preCheckCRUDPermission'+_className,req,res,next,target,sectionId,permissionsToEnsure,hookData);
+      if(hookData.override){
+        if(!hookData.allow) throw 403;
+        return;
+      }
       if(req.method==="POST"){
         if(_requireSection){
           if(!req.body.hasOwnProperty('sectionId') || req.body.sectionId==null)
@@ -142,6 +151,11 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
           sectionId = target.sectionId;
         if(_ownerIdField && target.ownerId === res.locals.user.id)
           permissionsToEnsure.push(permissions['delete own '+_className]);
+      }
+      await _emitter.emit('checkCRUDPermission'+_className,req,res,next,target,sectionId,permissionsToEnsure,hookData);
+      if(hookData.override){
+        if(!hookData.allow) throw 403;
+        return;
       }
       await this.ensurePermission(res.locals.conn,res.locals.user.id,sectionId,permissionsToEnsure);
     }
