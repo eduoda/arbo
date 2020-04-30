@@ -60,7 +60,6 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
   {name:'membership_role_id',type:'INT(11)',index:'membership_role_id',foreignKey:{references:'membership_role(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'role_id',type:'INT(11)',index:'role_id',foreignKey:{references:'role(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'role_permission_id',type:'INT(11)',index:'role_permission_id',foreignKey:{references:'role_permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
-  {name:'permission_id',type:'INT(11)',index:'permission_id',foreignKey:{references:'permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
 ]}){
   static async setup(conn){
     await super.setup(conn);
