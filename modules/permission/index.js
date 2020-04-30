@@ -96,8 +96,7 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
         membership.id as membership_id,
         membership_role.id as membership_role_id,
         membership_role.role_id as role_id,
-        role_permission.id as role_permission_id,
-        permission.id as permission_id
+        role_permission.id as role_permission_id
       FROM section AS leaf
       LEFT JOIN section ON section.lft <= leaf.lft AND section.rgt >= leaf.rgt
       INNER JOIN membership ON membership.section_id = section.id
