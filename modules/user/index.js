@@ -22,9 +22,9 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
   }
   static async load(conn){
     emitter.addListener('preCheckCRUDPermissionUser',(req,res,next,target,sectionId,permissionsToEnsure,hookData) => {
-      if(req.method=='DELETE') return;
-      if(req.method=='GET'){
-        if(res.locals.user.id==target.id){
+      if(req.method == 'DELETE') return;
+      if (req.method == 'GET' || req.method == 'PUT') {
+        if (res.locals.user.id==target.id) {
           hookData.override = true;
           hookData.allow = true;
         }
