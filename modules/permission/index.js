@@ -56,6 +56,11 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
   {name:'permission_id',type:'INT(11)',index:'user_permission',foreignKey:{references:'permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'section_id',type:'INT(11)',index:'user_permission',foreignKey:{references:'section(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
   {name:'permission',type:'VARCHAR(255)'},
+  {name:'membership_id',type:'INT(11)',index:'membership_id',foreignKey:{references:'membership(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
+  {name:'membership_role_id',type:'INT(11)',index:'membership_role_id',foreignKey:{references:'membership_role(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
+  {name:'role_id',type:'INT(11)',index:'role_id',foreignKey:{references:'role(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
+  {name:'role_permission_id',type:'INT(11)',index:'role_permission_id',foreignKey:{references:'role_permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
+  {name:'permission_id',type:'INT(11)',index:'permission_id',foreignKey:{references:'permission(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
 ]}){
   static async setup(conn){
     await super.setup(conn);
@@ -68,25 +73,12 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
     emitter.addListener('entityCreateMembership',(conn,membership) => {
       PermissionCache.build(conn,`WHERE membership.id=${membership.id}`);
     });
-    emitter.addListener('entityDeleteMembership', async (conn, membership) => {
-      const { userId, sectionId } = membership;
-
-      const mRoles = await MembershipRole.runSelect(conn, `SELECT * from membership_role WHERE membership_id=${membership.id}`, []);
-      await Promise.all(mRoles.map(mr => mr.delete(conn)));
-
-      const pCache = await PermissionCache.runSelect(conn, `SELECT * from permission_cache WHERE user_id=${userId} AND section_id=${sectionId}`, []);
-      await Promise.all(pCache.map(pc => pc.delete(conn)))
-    });
     emitter.addListener('entityCreateMembershipRole',(conn,membershipRole) => {
       PermissionCache.build(conn,`WHERE membership_role.id=${membershipRole.id}`);
     });
     emitter.addListener('entityCreateRolePermission',(conn,rolePermission) => {
       PermissionCache.build(conn,`WHERE role_permission.id=${rolePermission.id}`);
     });
-    // dont need to run build cause new permissions are given to nobody
-    // emitter.addListener('entityCreatePermission',async permission => {
-    //   PermissionCache.build(`WHERE permission.id=${permission.id}`);
-    // });
     //PermissionCache.build(conn);
   }
   static async rebuild(conn){
@@ -101,7 +93,12 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
         membership.user_id AS user_id,
         leaf.id as section_id,
         permission.id as permission_id,
-        permission.permission AS permission
+        permission.permission AS permission,
+        membership.id as membership_id,
+        membership_role.id as membership_role_id,
+        membership_role.role_id as role_id,
+        role_permission.id as role_permission_id,
+        permission.id as permission_id
       FROM section AS leaf
       LEFT JOIN section ON section.lft <= leaf.lft AND section.rgt >= leaf.rgt
       INNER JOIN membership ON membership.section_id = section.id
