@@ -87,7 +87,7 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
   }
   static async build(conn,where=''){
     let n = await this.rawInsert(conn,`
-      INSERT INTO permission_cache (user_id,section_id,permission_id,permission)
+      INSERT INTO permission_cache (user_id,section_id,permission_id,permission,membership_id,membership_role_id,role_id,role_permission_id)
       SELECT
         membership.user_id AS user_id,
         leaf.id as section_id,
