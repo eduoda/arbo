@@ -1,6 +1,7 @@
 let express = require("express");
 const Base = require('../base');
 let {emitter,vars,permissions} = require('../../globals')
+const { MembershipRole } = require('../section');
 
 class Permission extends Base({_restify:true,_emitter:emitter,_table:'permission',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
@@ -66,6 +67,15 @@ class PermissionCache extends Base({_restify:true,_emitter:emitter,_table:'permi
     });
     emitter.addListener('entityCreateMembership',(conn,membership) => {
       PermissionCache.build(conn,`WHERE membership.id=${membership.id}`);
+    });
+    emitter.addListener('entityDeleteMembership', async (conn, membership) => {
+      const { userId, sectionId } = membership;
+
+      const mRoles = await MembershipRole.runSelect(conn, `SELECT * from membership_role WHERE membership_id=${membership.id}`, []);
+      await Promise.all(mRoles.map(mr => mr.delete(conn)));
+
+      const pCache = await PermissionCache.runSelect(conn, `SELECT * from permission_cache WHERE user_id=${userId} AND section_id=${sectionId}`, []);
+      await Promise.all(pCache.map(pc => pc.delete(conn)))
     });
     emitter.addListener('entityCreateMembershipRole',(conn,membershipRole) => {
       PermissionCache.build(conn,`WHERE membership_role.id=${membershipRole.id}`);
