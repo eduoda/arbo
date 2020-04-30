@@ -26,12 +26,6 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(express.json());
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
-    res.locals.lastMiddlewareWereCalled = false;
-    res.on('finish',  () => {
-      if(!res.locals.lastMiddlewareWereCalled){
-        console.log("DONT FORGET TO CALL NEXT:" + req.originalUrl);
-      }
-    });
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
       console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
@@ -127,9 +121,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
     app.use(async (req, res, next) => {
       console.log("COMMIT");
       await User.rawAll(res.locals.conn,'COMMIT;');
-      console.log("MYSQL CONN RELEASE");
       await res.locals.conn.release();
-      res.locals.lastMiddlewareWereCalled = true;
       next();
     });
     app.use(async (err, req, res, next) => {
@@ -137,10 +129,18 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
       }
-      if(res.headersSent) return next(err);
+      await res.locals.conn.release();
+      if(res.headersSent){
+        console.error("ERROR AFTER HEADERS");
+        console.error(err);
+        return next(err);
+      }
       if(err.code && err.code=='ER_DUP_ENTRY') err = 409;
       if(Number.isInteger(err)) res.status(err).send();
-      else res.status(500).send();
+      else {
+        console.error(err);
+        res.status(500).send();
+      }
       next(err);
     });
     port = port?port:3000;
