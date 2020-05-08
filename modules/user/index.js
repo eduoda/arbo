@@ -98,6 +98,21 @@ User.router.post("/auth", async (req, res, next) => {
   }catch(e){next(e)}
 });
 
+User.router.post("/changePassword", async (req, res, next) => {
+  try{
+    if(!res.locals.user.checkPassword(req.body.oldPassword))
+      return next(403);
+    if(!req.body.password || req.body.password.length<6 || req.body.password!=req.body.confirm)
+      return next(400);
+
+    res.locals.user.password = req.body.password;
+    await res.locals.user.save(res.locals.conn);
+
+    res.json({});
+    next();
+  }catch(e){next(e)}
+});
+
 // User.router.get("/tokens", async (req, res, next) => {
 //   try{
 //     let es = await Token.search(res.locals.conn,{userId:res.locals.user.id},0,1000);
