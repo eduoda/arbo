@@ -1,5 +1,6 @@
 let express = require("express");
 const Base = require('../base');
+let { Var } = require('../var');
 let {emitter,vars,permissions} = require('../../globals');
 let CryptUtils = require('../cryptUtils');
 
