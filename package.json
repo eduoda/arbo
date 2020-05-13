@@ -17,7 +17,7 @@
     "mysql": "^2.18.1",
     "nodemailer": "^6.4.6",
     "nodemon": "^1.19.4",
-    "notorm": "^0.0.5"
+    "notorm": "^0.0.7"
   },
   "devDependencies": {
     "mocha": "^6.2.3",
