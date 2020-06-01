@@ -1,5 +1,6 @@
 let express = require("express");
 const Base = require('../base');
+const { Var } = require('../var');
 let {emitter,vars,permissions} = require('../../globals')
 const { MembershipRole } = require('../section');
 
@@ -8,6 +9,14 @@ class Permission extends Base({_restify:true,_emitter:emitter,_table:'permission
   {name:'permission',type:'VARCHAR(255)',constraint:'UNIQUE'},
   {name:'description',type:'VARCHAR(255)'}
 ]}){
+  static async load(conn){
+    emitter.addListener('entityCreatePermission',(conn,v) => {
+      permissions[v.permission] = v.id;
+    });
+    emitter.addListener('entityDeletePermission',(conn,v) => {
+      delete permissions[v.permission];
+    });
+  }
   static async setup(conn){
     await super.setup(conn);
     let adminPermission = await new Permission({permission:'admin'}).save(conn);

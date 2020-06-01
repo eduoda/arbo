@@ -1,5 +1,6 @@
 let express = require("express");
 const Base = require('../base');
+let { Var } = require('../var');
 let {emitter,vars,permissions} = require('../../globals');
 let CryptUtils = require('../cryptUtils');
 
@@ -22,7 +23,7 @@ class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
   }
   static async load(conn){
     emitter.addListener('preCheckCRUDPermissionUser',(req,res,next,target,sectionId,permissionsToEnsure,hookData) => {
-      if(req.method == 'DELETE') return;
+      if(!target) return;
       if(req.method == 'GET' || req.method == 'PUT'){
         if(res.locals.user.id==target.id){
           hookData.override = true;
@@ -94,6 +95,21 @@ User.router.post("/auth", async (req, res, next) => {
     if(!user.checkPassword(req.body.password))
       return next(401);
     res.json(await Token.createToken(res.locals.conn,user.id));
+    next();
+  }catch(e){next(e)}
+});
+
+User.router.post("/changePassword", async (req, res, next) => {
+  try{
+    if(!res.locals.user.checkPassword(req.body.oldPassword))
+      return next(403);
+    if(!req.body.password || req.body.password.length<6 || req.body.password!=req.body.confirm)
+      return next(400);
+
+    res.locals.user.password = req.body.password;
+    await res.locals.user.save(res.locals.conn);
+
+    res.json({});
     next();
   }catch(e){next(e)}
 });

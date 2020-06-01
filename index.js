@@ -30,6 +30,11 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
     }
+    res.locals.conn.arbo = {
+      req: req,
+      res: res,
+      next: next,
+    }
     return next();
   });
   app.modules = [
@@ -119,8 +124,11 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       console.log(e);
     }
     app.use(async (req, res, next) => {
-      console.log("COMMIT");
-      await User.rawAll(res.locals.conn,'COMMIT;');
+      if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
+        console.log("COMMIT");
+        await User.rawAll(res.locals.conn,'COMMIT;');
+      }
+      res.locals.conn.arbo = null;
       await res.locals.conn.release();
       next();
     });
@@ -129,6 +137,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
       }
+      res.locals.conn.arbo = null;
       await res.locals.conn.release();
       if(res.headersSent){
         console.error("ERROR AFTER HEADERS");
