@@ -196,7 +196,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
         let offset = req.query.offset || 0;
         let limit = req.query.limit || 10;
         let es = await baseClass.searchDeep(res.locals.conn,res.locals.user.id,offset,limit,req.params.sid);
-        es.forEach(async e => {await e.prepare(res.locals.conn)});
+        await Promise.all(es.map(e => e.prepare(res.locals.conn)));
         res.json(es);
         next();
       }catch(e){next(e)}
