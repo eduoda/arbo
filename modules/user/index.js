@@ -106,7 +106,7 @@ User.router.post('/forgotPassword', async (req, res, next) => {
     user = user[0];
 
     const token = await Token.createToken(res.locals.conn, user.id, 1);
-    mailer.send({
+    const mailRes = await mailer.send({
       from: 'noreply@arbojs.com.br',
       to: `${user.email}`,
       subject: 'Recuperação de senha',
@@ -114,7 +114,7 @@ User.router.post('/forgotPassword', async (req, res, next) => {
 
   ${token.token}`
     })
-    res.json({});
+    res.json({ status: mailRes.response.split('[')[0].trim(), link: `https://ethereal.email/message/${mailRes.response.split('MSGID=')[1].split(']')[0]}`});
     next();
   } catch (e) { next(e); }
 });
