@@ -101,6 +101,8 @@ User.router.post("/auth", async (req, res, next) => {
 
 User.router.post('/forgotPassword', async (req, res, next) => {
   try {
+    if ((!req.body.email && !req.body.login) || !req.body.baseUrl || !req.body.baseUrl.includes('{token}')) return next(400);
+
     let user = await User.search(res.locals.conn, { email: req.body.email, login: req.body.login }, 0, 1, false, 'OR');
     if (!user.length) return next(404);
     user = user[0];
@@ -112,7 +114,7 @@ User.router.post('/forgotPassword', async (req, res, next) => {
       subject: 'Recuperação de senha',
       text: `O link a seguir será valido para redefinir sua senha por 1 uso ou 24 horas:
 
-  ${token.token}`
+  ${req.body.baseUrl.replace('{token}', token.token)}`
     })
     res.json({ status: mailRes.response.split('[')[0].trim(), link: `https://ethereal.email/message/${mailRes.response.split('MSGID=')[1].split(']')[0]}`});
     next();
