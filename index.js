@@ -60,7 +60,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         }
         if(mod.setup)
           await mod.setup(conn);
-        else
+        else if(mod.createTable)
           await mod.createTable(conn);
         await new Var({name:'module_'+mod.name,value:true}).save(conn);
         await Var.loadVars(conn).then(console.log("Vars reloaded"));
