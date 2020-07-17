@@ -1,7 +1,7 @@
 let express = require("express");
 const Base = require('../base');
 let { Var } = require('../var');
-let {emitter,vars,permissions} = require('../../globals');
+let {emitter,vars,mailer,permissions} = require('../../globals');
 let CryptUtils = require('../cryptUtils');
 
 class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
@@ -97,6 +97,48 @@ User.router.post("/auth", async (req, res, next) => {
     res.json(await Token.createToken(res.locals.conn,user.id));
     next();
   }catch(e){next(e)}
+});
+
+User.router.post('/forgotPassword', async (req, res, next) => {
+  try {
+    if ((!req.body.email && !req.body.login) || !req.body.baseUrl || !req.body.baseUrl.includes('{token}')) return next(400);
+
+    let user = await User.search(res.locals.conn, { email: req.body.email, login: req.body.login }, 0, 1, false, 'OR');
+    if (!user.length) return next(404);
+    user = user[0];
+
+    const token = await Token.createToken(res.locals.conn, user.id, 1);
+    const mailRes = await mailer.send({
+      from: 'noreply@arbojs.com.br',
+      to: `${user.email}`,
+      subject: 'Recuperação de senha',
+      text: `O link a seguir será valido para redefinir sua senha por 1 uso ou 24 horas:
+
+  ${req.body.baseUrl.replace('{token}', token.token)}`
+    })
+    res.json({ status: mailRes.response.split('[')[0].trim(), link: `https://ethereal.email/message/${mailRes.response.split('MSGID=')[1].split(']')[0]}`});
+    next();
+  } catch (e) { next(e); }
+});
+
+User.router.post('/resetPassword', async (req, res, next) => {
+  try {
+    if (!req.body.token || !req.body.password || req.body.password != req.body.confirmPassword) return next(400);
+
+    let token = await Token.search(res.locals.conn, {token: req.body.token},0,1);
+    if (!token.length) return next(401);
+    token = token[0]
+
+    const user = await new User({id: token.userId}).load(res.locals.conn);
+    if (!user) return next(500);
+
+    user.password = req.body.password;
+    await user.save(res.locals.conn);
+    await token.delete(res.locals.conn);
+
+    res.json(user);
+    next();
+  } catch (e) { await User.rawAll(res.locals.conn, 'ROLLBACK'); next(e); }
 });
 
 User.router.post("/changePassword", async (req, res, next) => {
