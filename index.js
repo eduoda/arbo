@@ -27,7 +27,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
     res.locals.requesterIp = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-    console.log(`incoming request by ${ip} on ${req.url}`);
+    console.log(`incoming request by ${res.locals.requesterIp} on ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
       console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
