@@ -121,6 +121,11 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         }
       }
 
+      app.get('/*', async (req, res, next) => {
+        console.log(`incoming request from ${res.locals.requesterIp}: ${req.url} is not a valid route`);
+        next(404);
+      })
+
       conn.release();
     }catch(e){
       console.log(e);
