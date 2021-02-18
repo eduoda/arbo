@@ -26,6 +26,8 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(express.json());
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
+    res.locals.requesterIp = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    console.log(`incoming request by ${ip} on ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
       console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
@@ -124,6 +126,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       console.log(e);
     }
     app.use(async (req, res, next) => {
+      console.log(`request by ${res.locals.requesterIp} on ${req.url} exited with status ${res.statusCode}`);
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
         console.log("COMMIT");
         await User.rawAll(res.locals.conn,'COMMIT;');
@@ -133,6 +136,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       next();
     });
     app.use(async (err, req, res, next) => {
+      console.log(`request by ${res.locals.requesterIp} on ${req.url} exited with status ${res.statusCode}`);
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
         console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
