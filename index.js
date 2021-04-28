@@ -26,6 +26,8 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(express.json());
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
+    res.locals.requesterIp = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    console.log(`incoming request: ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
       console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
@@ -119,11 +121,16 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         }
       }
 
+      app.get('/*', async (req, res, next) => {
+        next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp})
+      })
+
       conn.release();
     }catch(e){
       console.log(e);
     }
     app.use(async (req, res, next) => {
+      console.log(`request to ${req.url} exited with status ${res.statusCode}`);
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
         console.log("COMMIT");
         await User.rawAll(res.locals.conn,'COMMIT;');
@@ -133,6 +140,8 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       next();
     });
     app.use(async (err, req, res, next) => {
+      console.log(`error on request from ${res.locals.requesterIp} to ${req.url}:`);
+      console.log(err);
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
         console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
@@ -145,6 +154,10 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         return next(err);
       }
       if(err.code && err.code=='ER_DUP_ENTRY') err = 409;
+      else if (err.code && err.code == 404 && err.msg && err.msg.endsWith('is not a valid route')) {
+        err = 404;
+        // TODO: write this to fail2ban log file
+      }
       if(Number.isInteger(err)) res.status(err).send();
       else {
         console.error(err);
