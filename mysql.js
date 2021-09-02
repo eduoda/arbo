@@ -1,7 +1,9 @@
 const mysql = require('mysql');
 
 class MySQL{
-  constructor(options){
+  constructor(){
+  }
+  setOptions(options){
     this.pool =  mysql.createPool(options);
   }
   getConn(){
