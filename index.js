@@ -1,7 +1,7 @@
-let {emitter,vars,permissions,mailer} = require('./globals')
+let {mysql,emitter,vars,permissions,mailer,cron} = require('./globals')
 let express = require("express");
 let cors = require('cors')
-let {MySQL} = require('./mysql');
+// let {MySQL} = require('./mysql');
 let {Var} = require('./modules/var');
 let {Permission,Role,RolePermission,PermissionCache} = require('./modules/permission');
 let {User,Token} = require('./modules/user');
@@ -16,10 +16,11 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
     user: "root",
     password: "root"
   }, _mysqlOptions);
-  let mysql = new MySQL(_mysqlOptions);
+  mysql.setOptions(_mysqlOptions)
   if(!_mailOptions)
     _mailOptions = {test:true};
   mailer.setOptions(_mailOptions);
+  cron.mysql = mysql;
 
   app = express();
   app.use(cors());
@@ -81,9 +82,33 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
     try{
       let conn = await mysql.getConn();
 
-      // await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 0;', []);
-      // app.modules.forEach(async mod => {if(mod.uninstall) await mod.uninstall(conn); else await mod.dropTable(conn)});
-      // await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 1;', []);
+      await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 0;', []);
+      for(mod of app.modules){
+        if(mod.shouldUninstall){
+          console.log("Uninstalling "+mod.name);
+          if(mod.uninstall) await mod.uninstall(conn);
+          else await mod.dropTable(conn)
+          if(mod.name!='Permission'){
+            if(mod.permissions)
+              for(const perm of mod.permissions){
+                try{
+                  let p = await new Permission({permission:perm}).first(conn);
+                  await p.delete(conn);
+                }catch(e){
+                  console.error("Error uninstalling module "+mod.name);
+                  console.log(e);
+                  return;
+                }
+              }
+            await Permission.loadPermissions(conn).then(console.log("Permissions reloaded"));
+          }
+          let modvar = new Var({name:'module_'+mod.name});
+          await modvar.first(conn);
+          await modvar.delete(conn);
+          console.log("Uninstalled "+mod.name);
+        }
+      }
+      await User.rawRun(conn,'SET FOREIGN_KEY_CHECKS = 1;', []);
 
       let tables = await User.rawAll(conn,'SELECT table_name AS t FROM information_schema.tables WHERE table_schema=?;',[_mysqlOptions.database]).then(res => res.map(x => x.t))
 
