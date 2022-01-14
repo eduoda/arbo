@@ -147,7 +147,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       }
 
       app.get('/*', async (req, res, next) => {
-        next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp})
+        if (!res.writableEnded) next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp})
       })
 
       conn.release();
