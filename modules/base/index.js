@@ -31,7 +31,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
     static async searchDeep(conn,userId,offset,limit,sectionId=null,deep=true,whereInjection='',whereValuesInjection=[],selectInjection='',joinInjection='',groupInjection=''){
       if(_requireSection){
         let query = `
-          SELECT ${this.table}.* ${selectInjection!=''?','+selectInjection:''}
+          SELECT ${this.getSQLColumns()} ${selectInjection!=''?','+selectInjection:''}
           FROM ${this.table}
           JOIN section AS parent_section ON parent_section.id = ${this.table}.section_id
           JOIN section AS ancestor ON parent_section.lft BETWEEN ancestor.lft AND ancestor.rgt ${sectionId?'AND ancestor.id = ?':''}
@@ -57,7 +57,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
         return this.runSelect(conn,query,values.concat(whereValuesInjection));
       } else {
         let query = `
-          SELECT ${this.table}.* ${selectInjection!=''?','+selectInjection:''}
+          SELECT ${this.getSQLColumns()} ${selectInjection!=''?','+selectInjection:''}
           FROM ${this.table}
           ${joinInjection}
           ${whereInjection!=''?'WHERE '+whereInjection:''}
