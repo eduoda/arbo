@@ -27,7 +27,16 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(express.json());
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
-    res.locals.requesterIp = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+    res.locals.requesterIp = req.headers['x-forwarded-for']
+      ? req.headers['x-forwarded-for'].split(',').pop().trim()
+      : req.connection
+        ? req.connection.remoteAddress
+        : req.socket
+          ? req.socket.remoteAddress
+          : req.connection.socket
+            ? req.connection.socket.remoteAddress
+            : '';
+
     console.log(`incoming request: ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
       console.log('START TRANSACTION;')
@@ -147,7 +156,8 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       }
 
       app.get('/*', async (req, res, next) => {
-        if (!res.writableEnded) next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp})
+        if (!res.writableEnded) next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp});
+        else next();
       })
 
       conn.release();
