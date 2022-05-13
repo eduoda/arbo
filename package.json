@@ -1,6 +1,6 @@
 {
   "name": "arbojs",
-  "version": "0.0.23",
+  "version": "0.0.25",
   "description": "Lightweight CMF",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "nodemailer": "^6.6.3",
     "node-cron": "^3.0.0",
     "nodemon": "^2.0.12",
-    "notorm": "^0.0.9"
+    "notorm": "^0.0.10"
   },
   "devDependencies": {
     "mocha": "^6.2.3",

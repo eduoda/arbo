@@ -24,7 +24,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
 
   app = express();
   app.use(cors());
-  app.use(express.json());
+  app.use(express.json({limit: '100mb'}));
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
     res.locals.requesterIp = req.headers['x-forwarded-for']
