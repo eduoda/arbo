@@ -208,7 +208,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
         if(_requireSection && !req.body.hasOwnProperty('sectionId'))
           req.body.sectionId = e.sectionId;
         await baseClass.checkCRUDPermission(req,res,next,e);
-        res.json(await (await new baseClass(req.body).save(res.locals.conn)).prepare(res.locals.conn));
+        res.json(await (await new baseClass(Object.assign({}, e, req.body)).save(res.locals.conn)).prepare(res.locals.conn));
         next();
       }catch(e){next(e)}
     });
