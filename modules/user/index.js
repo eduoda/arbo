@@ -99,6 +99,20 @@ User.router.post("/auth", async (req, res, next) => {
   }catch(e){next(e)}
 });
 
+User.router.get("/memberships", async (req, res, next) =>{
+  try {
+    let offset = req.query.offset || 0;
+    let limit = req.query.limit || 10;
+    const memberships = await Membership.search(
+      res.locals.conn,
+      {userId:res.locals.user.id},
+      offset,limit
+    );
+    res.json(memberships);
+    next();
+  } catch (e) { next(e); }
+});
+
 User.router.post('/forgotPassword', async (req, res, next) => {
   try {
     if ((!req.body.email && !req.body.login) || !req.body.baseUrl || !req.body.baseUrl.includes('{token}')) return next(400);
