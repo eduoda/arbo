@@ -3,9 +3,10 @@ const camelize = require('camelcase');
 let express = require("express");
 let {app,vars,permissions} = require('../../globals')
 
-module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_className,_table,_columns}) => {
+module.exports = ({_restify,_nanId,_requireSection,_basePath,_dbFlavor,_emitter,_className,_table,_columns}) => {
   _className = _className || camelize(_table,{pascalCase: true});
   _restify = _restify || false;
+  _nanId = _nanId || false;
   _requireSection = _requireSection || false;
   _basePath = _basePath || "/"+_className;
   let _ownerIdField = _columns.filter(col => {return col.name === "owner_id" || col.name === "ownerId"}).length > 0;
@@ -112,7 +113,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
       if(req.method==="POST"){
         if(_requireSection){
           if(!req.body.hasOwnProperty('sectionId') || req.body.sectionId==null)
-            throw 400;_restify
+            throw 400;
           sectionId = req.body.sectionId;
         }
         permissionsToEnsure.push(permissions['create '+_className]);
@@ -183,6 +184,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
 
     baseClass.router.get("/:id",async (req,res,next) => {
       try{
+        if(!_nanId && isNaN(req.params.id)) return next();
         let e = await new baseClass({id:req.params.id}).load(res.locals.conn);
         await baseClass.checkCRUDPermission(req,res,next,e);
         res.json(await e.prepare(res.locals.conn));
@@ -215,6 +217,7 @@ module.exports = ({_restify,_requireSection,_basePath,_dbFlavor,_emitter,_classN
 
     baseClass.router.delete("/:id",async (req,res,next) => {
       try{
+        if(!_nanId && isNaN(req.params.id)) return next();
         let e = await new baseClass({id:req.params.id}).load(res.locals.conn);
         await baseClass.checkCRUDPermission(req,res,next,e);
         await e.delete(res.locals.conn);
