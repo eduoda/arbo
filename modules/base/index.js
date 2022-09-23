@@ -32,7 +32,7 @@ module.exports = ({_restify,_nanId,_requireSection,_basePath,_dbFlavor,_emitter,
     static async searchDeep(conn,userId,offset,limit,sectionId=null,deep=true,whereInjection='',whereValuesInjection=[],selectInjection='',joinInjection='',groupInjection=''){
       if(_requireSection){
         let query = `
-          SELECT ${this.getSQLColumns()} ${selectInjection!=''?','+selectInjection:''}
+          SELECT DISTINCT ${this.getSQLColumns()} ${selectInjection!=''?','+selectInjection:''}
           FROM ${this.table}
           JOIN section AS parent_section ON parent_section.id = ${this.table}.section_id
           JOIN section AS ancestor ON parent_section.lft BETWEEN ancestor.lft AND ancestor.rgt ${sectionId?'AND ancestor.id = ?':''}
