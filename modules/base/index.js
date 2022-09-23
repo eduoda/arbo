@@ -32,7 +32,7 @@ module.exports = ({_restify,_nanId,_requireSection,_basePath,_dbFlavor,_emitter,
     static async searchDeep(conn,userId,offset,limit,sectionId=null,deep=true,whereInjection='',whereValuesInjection=[],selectInjection='',joinInjection='',groupInjection=''){
       if(_requireSection){
         let query = `
-          SELECT ${this.getSQLColumns()} ${selectInjection!=''?','+selectInjection:''}
+          SELECT DISTINCT ${this.getSQLColumns()} ${selectInjection!=''?','+selectInjection:''}
           FROM ${this.table}
           JOIN section AS parent_section ON parent_section.id = ${this.table}.section_id
           JOIN section AS ancestor ON parent_section.lft BETWEEN ancestor.lft AND ancestor.rgt ${sectionId?'AND ancestor.id = ?':''}
@@ -210,7 +210,7 @@ module.exports = ({_restify,_nanId,_requireSection,_basePath,_dbFlavor,_emitter,
         if(_requireSection && !req.body.hasOwnProperty('sectionId'))
           req.body.sectionId = e.sectionId;
         await baseClass.checkCRUDPermission(req,res,next,e);
-        res.json(await (await new baseClass(req.body).save(res.locals.conn)).prepare(res.locals.conn));
+        res.json(await (await new baseClass(Object.assign({}, e, req.body)).save(res.locals.conn)).prepare(res.locals.conn));
         next();
       }catch(e){next(e)}
     });
