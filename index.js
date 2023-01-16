@@ -37,9 +37,9 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
             ? req.connection.socket.remoteAddress
             : '';
 
-    console.log(`incoming request: ${req.url}`);
+    // console.log(`incoming request: ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
-      console.log('START TRANSACTION;')
+      // console.log('START TRANSACTION;')
       await User.rawAll(res.locals.conn,'START TRANSACTION;');
     }
     res.locals.conn.arbo = {
@@ -62,21 +62,21 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.enableModule = async function(conn,mod){
     try{
       if(!vars['module_'+mod.name]){
-        console.log("Installing "+mod.name);
+        // console.log("Installing "+mod.name);
         // new module
         if(mod.name!='Permission'){
           if(mod.permissions)
             for(const perm of mod.permissions)
               await new Permission({permission:perm}).save(conn)
-          await Permission.loadPermissions(conn).then(console.log("Permissions reloaded"));
+          await Permission.loadPermissions(conn)/* .then(console.log("Permissions reloaded")) */;
         }
         if(mod.setup)
           await mod.setup(conn);
         else if(mod.createTable)
           await mod.createTable(conn);
         await new Var({name:'module_'+mod.name,value:true}).save(conn);
-        await Var.loadVars(conn).then(console.log("Vars reloaded"));
-        console.log("Installed "+mod.name);
+        await Var.loadVars(conn)/* .then(console.log("Vars reloaded")) */;
+        // console.log("Installed "+mod.name);
       }
       if(mod.load)
         await mod.load(conn);
@@ -109,7 +109,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
                   return;
                 }
               }
-            await Permission.loadPermissions(conn).then(console.log("Permissions reloaded"));
+            await Permission.loadPermissions(conn)/* .then(console.log("Permissions reloaded")) */;
           }
           let modvar = new Var({name:'module_'+mod.name});
           await modvar.first(conn);
@@ -123,16 +123,16 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
 
       if(tables.includes("var")){
         // load infos
-        await Var.loadVars(conn).then(console.log("Vars loaded"));
+        await Var.loadVars(conn)/* .then(console.log("Vars loaded")) */;
       }else {
         // empty db, new installation
         await Var.setup(conn);
         await new Var({name:'module_'+Var.name,value:true}).save(conn);
-        await Var.loadVars(conn).then(console.log("Vars loaded"));
+        await Var.loadVars(conn)/* .then(console.log("Vars loaded")) */;
       }
 
       if(tables.includes("permission")){
-        await Permission.loadPermissions(conn).then(console.log("Permissions loaded"));
+        await Permission.loadPermissions(conn)/* .then(console.log("Permissions loaded")) */;
       }
 
       for(let i = 0;i<app.modules.length; i++){
@@ -165,9 +165,9 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       console.log(e);
     }
     app.use(async (req, res, next) => {
-      console.log(`request to ${req.url} exited with status ${res.statusCode}`);
+      // console.log(`request to ${req.url} exited with status ${res.statusCode}`);
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
-        console.log("COMMIT");
+        // console.log("COMMIT");
         await User.rawAll(res.locals.conn,'COMMIT;');
       }
       res.locals.conn.arbo = null;
@@ -178,7 +178,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       console.log(`error on request from ${res.locals.requesterIp} to ${req.url}:`);
       console.log(err);
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
-        console.log("ROLLBACK");
+        // console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
       }
       res.locals.conn.arbo = null;
