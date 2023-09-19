@@ -156,7 +156,13 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       }
 
       app.use('/*', async (req, res, next) => {
-        if (!res.writableEnded) next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp});
+        if (!res.writableEnded) {
+          const msg = (req.url.includes('.') || req.url == '/')
+            ? 'suspicious request'
+            : `${req.url} is not a valid route`;
+
+          next({code: 404, msg, requesterIp: res.locals.requesterIp});
+        }
         else next();
       })
 
@@ -175,8 +181,11 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       next();
     });
     app.use(async (err, req, res, next) => {
-      console.log(`error on request from ${res.locals.requesterIp} to ${req.url}:`);
-      console.log(err);
+      if (req.url.includes('.') || req.url == '/') console.log(`suspicious request from ${res.locals.requesterIp}`);
+      else {
+        console.log(`error on request from ${res.locals.requesterIp} to ${req.url}:`);
+        console.log(err);  
+      }      
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
         // console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
@@ -188,8 +197,9 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         console.error(err);
         return next(err);
       }
-      if(err.code && err.code=='ER_DUP_ENTRY') err = 409;
-      else if (err.code && err.code == 404 && err.msg && err.msg.endsWith('is not a valid route')) {
+      if(err.code=='ER_DUP_ENTRY') err = 409;
+      else if (err.code && err.msg?.endsWith('is not a valid route')) err = 404;
+      else if (err.code && err.msg == 'suspicious request') {
         err = 404;
         // TODO: write this to fail2ban log file
       }
