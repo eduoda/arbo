@@ -27,7 +27,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(express.json({limit: '100mb'}));
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
-    res.locals.requesterIp = req.headers['x-forwarded-for']
+    res.locals.requesterIp = (req.headers['x-forwarded-for']
       ? req.headers['x-forwarded-for'].split(',').pop().trim()
       : req.connection
         ? req.connection.remoteAddress
@@ -35,7 +35,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
           ? req.socket.remoteAddress
           : req.connection.socket
             ? req.connection.socket.remoteAddress
-            : '';
+            : '').replace(/::ffff:/g, '');
 
     // console.log(`incoming request: ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
@@ -62,7 +62,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.enableModule = async function(conn,mod){
     try{
       if(!vars['module_'+mod.name]){
-        // console.log("Installing "+mod.name);
+        console.log("Installing "+mod.name);
         // new module
         if(mod.name!='Permission'){
           if(mod.permissions)
@@ -76,7 +76,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
           await mod.createTable(conn);
         await new Var({name:'module_'+mod.name,value:true}).save(conn);
         await Var.loadVars(conn)/* .then(console.log("Vars reloaded")) */;
-        // console.log("Installed "+mod.name);
+        console.log("Installed "+mod.name);
       }
       if(mod.load)
         await mod.load(conn);
@@ -150,13 +150,19 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       for(let i = 0;i<app.modules.length; i++){
         let mod = app.modules[i];
         if(mod.router){
-          console.log("Add "+mod.name+" route at "+mod.basePath)
+          // console.log("Add "+mod.name+" route at "+mod.basePath)
           app.use(mod.basePath,mod.router);
         }
       }
 
       app.use('/*', async (req, res, next) => {
-        if (!res.writableEnded) next({code: 404, msg: `${req.url} is not a valid route`, requesterIp: res.locals.requesterIp});
+        if (!res.writableEnded) {
+          const msg = (req.url.includes('.') || req.url == '/')
+            ? 'suspicious request'
+            : `${req.url} is not a valid route`;
+
+          next({code: 404, msg, requesterIp: res.locals.requesterIp});
+        }
         else next();
       })
 
@@ -175,8 +181,11 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       next();
     });
     app.use(async (err, req, res, next) => {
-      console.log(`error on request from ${res.locals.requesterIp} to ${req.url}:`);
-      console.log(err);
+      if (req.url.includes('.') || req.url == '/') console.log(`suspicious request from ${res.locals.requesterIp}`);
+      else {
+        console.log(`error on request from ${res.locals.requesterIp} to ${req.url}:`);
+        console.log(err);  
+      }      
       if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
         // console.log("ROLLBACK");
         await User.rawAll(res.locals.conn,'ROLLBACK;');
@@ -188,8 +197,9 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
         console.error(err);
         return next(err);
       }
-      if(err.code && err.code=='ER_DUP_ENTRY') err = 409;
-      else if (err.code && err.code == 404 && err.msg && err.msg.endsWith('is not a valid route')) {
+      if(err.code=='ER_DUP_ENTRY') err = 409;
+      else if (err.code && err.msg?.endsWith('is not a valid route')) err = 404;
+      else if (err.code && err.msg == 'suspicious request') {
         err = 404;
         // TODO: write this to fail2ban log file
       }
