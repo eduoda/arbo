@@ -27,7 +27,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.use(express.json({limit: '100mb'}));
   app.use(mysql.mw());
   app.use(async (req, res, next) => {
-    res.locals.requesterIp = req.headers['x-forwarded-for']
+    res.locals.requesterIp = (req.headers['x-forwarded-for']
       ? req.headers['x-forwarded-for'].split(',').pop().trim()
       : req.connection
         ? req.connection.remoteAddress
@@ -35,7 +35,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
           ? req.socket.remoteAddress
           : req.connection.socket
             ? req.connection.socket.remoteAddress
-            : '';
+            : '').replace(/::ffff:/g, '');
 
     // console.log(`incoming request: ${req.url}`);
     if(['POST','PUT','DELETE','PATCH'].includes(req.method)){
