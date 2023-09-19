@@ -62,7 +62,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
   app.enableModule = async function(conn,mod){
     try{
       if(!vars['module_'+mod.name]){
-        // console.log("Installing "+mod.name);
+        console.log("Installing "+mod.name);
         // new module
         if(mod.name!='Permission'){
           if(mod.permissions)
@@ -76,7 +76,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
           await mod.createTable(conn);
         await new Var({name:'module_'+mod.name,value:true}).save(conn);
         await Var.loadVars(conn)/* .then(console.log("Vars reloaded")) */;
-        // console.log("Installed "+mod.name);
+        console.log("Installed "+mod.name);
       }
       if(mod.load)
         await mod.load(conn);
@@ -150,7 +150,7 @@ let arbo = ({_mysqlOptions,_mailOptions}) => {
       for(let i = 0;i<app.modules.length; i++){
         let mod = app.modules[i];
         if(mod.router){
-          console.log("Add "+mod.name+" route at "+mod.basePath)
+          // console.log("Add "+mod.name+" route at "+mod.basePath)
           app.use(mod.basePath,mod.router);
         }
       }
