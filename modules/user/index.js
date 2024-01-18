@@ -3,6 +3,7 @@ const Base = require('../base');
 let { Var } = require('../var');
 let {emitter,vars,mailer,permissions} = require('../../globals');
 let CryptUtils = require('../cryptUtils');
+let {Permission} = require('../permission');
 
 class User extends Base({_restify:true,_emitter:emitter,_table:'user',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
@@ -178,21 +179,112 @@ User.router.post("/changePassword", async (req, res, next) => {
 //   }catch(e){next(e)}
 // });
 
-class Token extends Base({_restify:true,_emitter:emitter,_table:'token',_columns:[
+class Token extends Base({_restify:false,_emitter:emitter,_table:'token',_columns:[
   {name:'id',type:'INT(11)',primaryKey:true,autoIncrement:true},
   {name:'user_id',type:'INT(11)',foreignKey:{references:'user(id)',onDelete:'CASCADE',onUpdate:'CASCADE'}},
+  {name:'scope',type:'VARCHAR(255)',index:'scope'},
   {name:'token',type:'VARCHAR(255)',constraint:'UNIQUE'},
   {name:'date',type:'DATETIME'},
   {name:'expiration',type:'DATETIME'}
 ]}){
-  static createToken(conn,userId,days=7){
+  static async setup(conn) {
+    await super.setup(conn);
+
+    await new Permission({ permission: 'create Token' }).save(conn);
+    await new Permission({ permission: 'read Token' }).save(conn);
+    await new Permission({ permission: 'list Token' }).save(conn);
+    await new Permission({ permission: 'search Token' }).save(conn);
+    await new Permission({ permission: 'edit Token' }).save(conn);
+    await new Permission({ permission: 'delete Token' }).save(conn);
+  }
+  
+  static async load(conn) {
+    emitter.addListener('entityLoadToken', (conn, token) => {
+        if (new Date(Date.now()) > token.expiration) {
+          // token expirou. apagar?
+        } else if (Math.ceil((token.expiration - new Date(Date.now())) / (1000 * 60 * 60 * 24)) < 7) {
+            // renovar token?
+        }
+    });
+
+    emitter.addListener('entityLoadMultipleToken', (conn, tokens) => {
+      tokens.forEach(token => {
+        if (new Date(Date.now()) > token.expiration) {
+          // token expirou. apagar?
+        } else if (Math.ceil((token.expiration - new Date(Date.now())) / (1000 * 60 * 60 * 24)) < 7) {
+            // renovar token?
+        }
+      })
+    });
+  }
+
+  static createToken(conn,userId,days=7,scope='session'){
     return new Token({
       userId:userId,
+      scope:scope,
       token:CryptUtils.hash(CryptUtils.randomString(10) , CryptUtils.randomString(40)+userId+Date.now() ),
       date:Token.now(),
       expiration:Token.timestampToLocalDatetime(Date.now()+days*24*60*60*1000)
     }).save(conn);
   }
 }
+
+Token.router = express.Router();
+Token.router.post("/",async (req,res,next) => {
+  try{
+    await Token.checkCRUDPermission(req,res,next);
+    res.json(await new Token(req.body).save(res.locals.conn));
+    next();
+  }catch(e){next(e)}
+});
+
+Token.router.post("/new-api",async (req,res,next) => {
+  try{
+    await Token.checkCRUDPermission(req,res,next);
+    res.json(await Token.createToken(res.locals.conn, res.locals.user.id, 30, 'api'));
+    next();
+  }catch(e){next(e)}
+});
+
+Token.router.get("/:id",async (req,res,next) => {
+  try{
+    let e = await new Token({id:req.params.id}).load(res.locals.conn);
+    await Token.checkCRUDPermission(req,res,next,e);
+    res.json(e);
+    next();
+  }catch(e){next(e)}
+});
+
+Token.router.get("/",async (req,res,next) => {
+  try{
+    await Token.checkCRUDPermission(req,res,next);
+    let offset = req.query.offset || 0;
+    let limit = req.query.limit || 10;
+    let scope = req.query.scope;
+    let es = await Token.searchDeep(res.locals.conn,res.locals.user.id,offset,limit,req.params.sid, true, scope?'user_id = ? AND scope = ?':'user_id = ?', scope?[res.locals.user.id, scope]:[res.locals.user.id]);
+    es.forEach(e => {e.token = e.token.substring(0, 10)+'...';});
+    res.json(es);
+    next();
+  }catch(e){next(e)}
+});
+
+Token.router.put("/",async (req,res,next) => {
+  try{
+    let e = await new Token({id:req.body.id}).load(res.locals.conn);
+    await Token.checkCRUDPermission(req,res,next,e);
+    res.json(await new Token(Object.assign({}, e, req.body)).save(res.locals.conn));
+    next();
+  }catch(e){next(e)}
+});
+
+Token.router.delete("/:id",async (req,res,next) => {
+  try{
+    let e = await new Token({id:req.params.id}).load(res.locals.conn);
+    await Token.checkCRUDPermission(req,res,next,e);
+    await e.delete(res.locals.conn);
+    res.json(e);
+    next();
+  }catch(e){next(e)}
+});
 
 module.exports = {User,Token};
