@@ -262,7 +262,7 @@ Token.router.get("/",async (req,res,next) => {
     let limit = req.query.limit || 10;
     let scope = req.query.scope;
     let es = await Token.searchDeep(res.locals.conn,res.locals.user.id,offset,limit,req.params.sid, true, scope?'user_id = ? AND scope = ?':'user_id = ?', scope?[res.locals.user.id, scope]:[res.locals.user.id]);
-    es.forEach(e => {e.token = e.token.substring(0, 10)+'...';});
+    // es.forEach(e => {e.token = e.token.substring(0, 10)+'...';});
     res.json(es);
     next();
   }catch(e){next(e)}
